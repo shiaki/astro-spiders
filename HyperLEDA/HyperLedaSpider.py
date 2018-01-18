@@ -23,13 +23,6 @@ class HyperLedaSpider:
         req_url = self.hyperleda_mirror + 'ledacat.cgi?o=' + ps.quote(name)
         req = requests.get(req_url, timeout=self.req_timeout)
 
-        #with open('req9.tmp', 'w') as fp:
-        #    fp.write(req.text)
-
-        #with open('req9.tmp', 'r') as fp:
-        #    req_text = fp.read()
-        #print (req_text)
-
         # cook
         soup = BeautifulSoup(req_text, "html5lib")
 

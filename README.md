@@ -1,2 +1,3 @@
 # astro-spiders
-spider program for astronomers to retrieve information from online databases
+Spider programs for astronomers to retrieve information from online databases
+In development
