@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-#vcc:E8DBD5521DAD0AF4939F3908EE541D1EFD5835B910FBD015BEF4ADD3D7F2D2C4
-#sig:4447BE16A1EDE778F21AEF915AFEABA4C52C2EFA02E4E708ABED63CA69258110
+#vcc:
+#sig:
 
 '''
     NedSpider: Get information from NED, the NASA/IPAC Extragalactic Database
@@ -72,22 +72,31 @@ class NedSpider:
             match_only_galaxy=True, match_unique=False):
 
         # if there is a name, try it first.
-        if isinstance(name, str): self._init_by_name(name=name, \
-                ned_mirror_url=ned_mirror_url, req_timeout=req_timeout, \
-                match_only_galaxy=match_only_galaxy, match_unique=match_unique)
+        if isinstance(name, str):
+            self._init_by_name(name=name,
+                               ned_mirror_url=ned_mirror_url,
+                               req_timeout=req_timeout,
+                               match_only_galaxy=match_only_galaxy,
+                               match_unique=match_unique)
 
         # if name query succeeded, done.
         if hasattr(self, '_candidates'):
-            if len(self._candidates) > 0: return
+            if len(self._candidates) > 0:
+                return
 
         # otherwise, use RA/Dec
-        if radec is not None: self._init_by_radec(radec=radec, radius=radius, \
-                ned_mirror_url=ned_mirror_url, req_timeout=req_timeout, \
-                match_only_galaxy=match_only_galaxy, match_unique=match_unique)
+        if radec is not None:
+            self._init_by_radec(radec=radec,
+                                radius=radius,
+                                ned_mirror_url=ned_mirror_url,
+                                req_timeout=req_timeout,
+                                match_only_galaxy=match_only_galaxy,
+                                match_unique=match_unique)
 
         # if RA/Dec query succeeded, done.
         if hasattr(self, '_candidates'):
-            if len(self._candidates) > 0: return
+            if len(self._candidates) > 0:
+                return
 
         # cannot identify by either name or radec,
         raise IdentificationError('Failed to identify.')
@@ -158,20 +167,21 @@ class NedSpider:
             cols_i = row_i.find_all('td') # break into table cells
             self._candidates.append(tuple( \
                     [_split_link(col_i) for col_i in cols_i]))
-        # convert to list of tuple of (value, link)
+            # convert to list of tuple of (value, link)
 
         # take only galaxies?
-        if match_only_galaxy: self._candidates = list(filter(\
-                lambda x: x[4][0] in self._ned_galaxy_types, self._candidates))
-        if single_only: self._candidates = list(filter(
-                lambda x: x[4][0] == 'G', self._candidates))
-        #for cad_i in self._candidates[:25]: print(cad_i[1][0]) # DEBUG
-
+        if match_only_galaxy:
+            self._candidates = list(filter(
+                    lambda x: x[4][0] in self._ned_galaxy_types,
+                    self._candidates))
+        if single_only:
+            self._candidates = list(filter(
+                    lambda x: x[4][0] == 'G', self._candidates))
 
         # check how many objects matched
         N_src = len(self._candidates)
-        if N_src < 1: raise IdentificationError( \
-                'No source identified by this name.') # warum?
+        if N_src < 1:
+            raise IdentificationError( 'No source identified by this name.')
         if match_unique is True and N_src > 1:
             raise IdentificationError('Multiple sources identified.')
 
@@ -205,34 +215,43 @@ class NedSpider:
                         crd = SkyCoord(ra, dec, unit=('deg', 'deg'))
                 elif isinstance(ra, float) and isinstance(dec, float): # floats
                     crd = SkyCoord(ra, dec, unit=('deg', 'deg'))
-                else: raise TypeError(radec_format_complaint)
+                else:
+                    raise TypeError(radec_format_complaint)
 
             # case: not iterable
-            except TypeError: raise TypeError(radec_format_complaint)
+            except TypeError:
+                raise TypeError(radec_format_complaint)
 
             # case: iterable but wrong number
             except ValueError: # usually "too many to unpack"
                 if isinstance(radec, str): # not a single string?
                     if (':' in radec) or ('h' in 'radec'):
                         crd = SkyCoord(radec, unit=('hour', 'deg'))
-                    else: crd = SkyCoord(radec, unit=('deg', 'deg'))
-                else: raise TypeError(radec_format_complaint)
+                    else:
+                        crd = SkyCoord(radec, unit=('deg', 'deg'))
+                else:
+                    raise TypeError(radec_format_complaint)
 
             # complain anyway
-            except: raise
+            except:
+                raise
 
             # sanity check
-            if crd is None: raise RuntimeError('Failed to understand "radec".')
-            else: radec = crd # overwrite radec.
+            if crd is None:
+                raise RuntimeError('Failed to understand "radec".')
+            else:
+                radec = crd # overwrite radec.
 
         # overwrite default mirror settings
         if ned_mirror_url is None:
             self.ned_mirror_url = NedSpider._ned_mirror_url
-        else: self.ned_mirror_url = ned_mirror_url
+        else:
+            self.ned_mirror_url = ned_mirror_url
 
         if req_timeout is None:
             self.req_timeout = NedSpider._req_timeout
-        else: self.req_timeout = req_timeout
+        else:
+            self.req_timeout = req_timeout
 
         # convert radec in SkyCoord to hms:dms string.
         ra, dec = radec.to_string(style='hmsdms').split(' ')
@@ -274,16 +293,19 @@ class NedSpider:
         # convert to list of tuple of (value, link)
 
         # take only galaxies?
-        if match_only_galaxy: self._candidates = list(filter(\
-                lambda x: x[4][0] in self._ned_galaxy_types, self._candidates))
-        if single_only: self._candidates = list(filter(
-                lambda x: x[4][0] == 'G', self._candidates))
+        if match_only_galaxy:
+            self._candidates = list(filter(\
+                    lambda x: x[4][0] in self._ned_galaxy_types,
+                    self._candidates))
+        if single_only:
+            self._candidates = list(filter(
+                    lambda x: x[4][0] == 'G', self._candidates))
         # for cad_i in candidates: print(cad_i)
 
         # check how many objects matched
         N_src = len(self._candidates)
-        if N_src < 1: raise IdentificationError( \
-                'No source identified by this name.') # warum?
+        if N_src < 1:
+            raise IdentificationError('No source identified by this name.')
         if match_unique is True and N_src > 1:
             #for i in self._candidates: print (i[1][0])
             #print('radius', radius)
@@ -339,11 +361,14 @@ class NedSpider:
         '''
 
         # create "cache" of soup objects if necessary
-        if not hasattr(self, '_soup'): self._soup = {}
+        if not hasattr(self, '_soup'):
+            self._soup = {}
 
         # if the desired page is already retrieved, return soup directly
-        if idx  in self._soup: return self._soup[idx]
-        if name in self._soup: return self._soup[name]
+        if idx  in self._soup:
+            return self._soup[idx]
+        if name in self._soup:
+            return self._soup[name]
 
         # when calling with neither name nor idx,
         if idx is None and name is None:
@@ -363,10 +388,12 @@ class NedSpider:
             else: # if idx is not explicitly given, match by name.
                 id_msk = self.candidates['name'] == name.strip()
                 N_fcad = id_msk.astype(int).sum() # number of matched
-                if N_fcad > 1: raise IdentificationError(\
-                        "More than one candidates matched by the name.")
-                if N_fcad < 1: raise IdentificationError(\
-                        "No candidate is matched by this name.")
+                if N_fcad > 1:
+                    raise IdentificationError(\
+                            "More than one candidates matched by the name.")
+                if N_fcad < 1:
+                    raise IdentificationError(\
+                            "No candidate is matched by this name.")
                 idx = idx_msk.tolist().index(True) # write idx with the matched
                 name = name.strip() # overwrite name with stripped as we did.
 
@@ -435,8 +462,8 @@ class NedSpider:
         '''
         # obsolete, for the change of API. (see NOTE180114A)
 
-    def alias(self, name=None, idx=None, galaxy_only=False, single_only=False,
-              expand_aliases=False):
+    def alias(self, name=None, idx=None, galaxy_only=False,
+              single_only=False, expand_aliases=False):
 
         '''
             Get cross-identified names of this source.
@@ -444,7 +471,6 @@ class NedSpider:
         '''
 
         # retrieve the detailed information page
-        #print(self.candidates)
         soup_i = self._retrieve_page(name=name, idx=idx)
 
         # find the table of cross-identified names
@@ -453,7 +479,7 @@ class NedSpider:
         cid_tab = cid_elm.find('table').find_all('td') # find table cells
         cid_names = [w.text.strip() for w in cid_tab] # get identified names
         cid_names = [re.sub(' +', ' ', w) for w in cid_names]
-        # remove double space in source names. e.g. IRAS  03174-1935
+        # remove double space in source names. e.g. IRAS__03174-1935
         cid_names = list(zip(cid_names[0::2], cid_names[1::2]))
         # group name and type in pairs
         cid_names = list(filter(lambda x: x[0] not in \
@@ -461,9 +487,11 @@ class NedSpider:
         # remove table headers and empty entries
 
         # remove other kind of sources (IrS, UvS, etc) if required
-        if galaxy_only: cid_names = list(filter( \
-                lambda w: w[1] in self._ned_galaxy_types, cid_names))
-        if galaxy_only: cid_names = list(filter(lambda w: w[1] == 'G', cid_names))
+        if galaxy_only:
+            cid_names = list(filter(
+                    lambda w: w[1] in self._ned_galaxy_types, cid_names))
+        if galaxy_only:
+            cid_names = list(filter(lambda w: w[1] == 'G', cid_names))
 
         if expand_aliases: # expand NED-style names to other.
             expand_list = []
@@ -494,8 +522,9 @@ class NedSpider:
         if idx is None and name is None:
             if self.N_candidates == 1:
                 N_phot, phot_link = self._candidates[0][12]
-            else: raise RuntimeError('Object not uniquely identified' + \
-                    ' in the candidate list.')
+            else:
+                raise RuntimeError('Object not uniquely ' + \
+                        'identified in the candidate list.')
             # in most cases, this branch should be triggered.
 
         if N_phot is None and phot_link is None: # failed in the previous step
@@ -504,9 +533,11 @@ class NedSpider:
             else: # try to indentify by name
                 for cad_i in self._candidates:
                     if cad_i[1][0] == name: # exact match
-                        if N_phot is None: N_phot, phot_link = cad_i[12]
-                        else: raise IdentificationError(\
-                                'More than one candidate matched by name')
+                        if N_phot is None:
+                            N_phot, phot_link = cad_i[12]
+                        else:
+                            raise IdentificationError(\
+                                    'More than one candidate matched by name')
                 if N_phot is None:
                     raise IdentificationError( \
                             'No candidate is matched by this name.')
@@ -520,11 +551,11 @@ class NedSpider:
         # obsolete: change of API. (see NOTE180111A)
 
         # no photometry measurement, return None
-        if phot_link is None: return []
+        if phot_link is None:
+            return []
 
         # modify the link so that we can have a XML table
-        # print(phot_link, "this is phot_link", N_phot, "this is N_phot")
-        req_url = ps.urlsplit(self.ned_mirror_url + phot_link) # now in namedtuple
+        req_url = ps.urlsplit(self.ned_mirror_url + phot_link) # in namedtuple
         query_par = dict(ps.parse_qsl(req_url.query)) # parse query str
         query_par['img_stamp'] = 'NO'
         query_par['of'] = 'xml_main'
@@ -547,8 +578,10 @@ class NedSpider:
         # the project is partly in py2
 
         # if required, return numpy recarray
-        if as_recarray: return phot_table.as_array()
-        else: return phot_table # otherwise, return astropy table (default)
+        if as_recarray:
+            return phot_table.as_array()
+        else:
+            return phot_table # otherwise, return astropy table (default)
 
     def classification(self, name=None, idx=None):
 
@@ -563,8 +596,9 @@ class NedSpider:
         if idx is None and name is None:
             if self.N_candidates == 1:
                 ned_objname = self._candidates[0][1][0]
-            else: raise RuntimeError('Target not uniquely identified' \
-                    ' in the candidate list.')
+            else:
+                raise RuntimeError('Target not uniquely identified' \
+                        ' in the candidate list.')
 
         # if we have a valid index, use it.
         if isinstance(idx, int):
@@ -572,10 +606,11 @@ class NedSpider:
         else: # try to indentify by name
             for cad_i in self._candidates:
                 if cad_i[1][0] == name: # exact match
-                    if N_phot is None:
+                    if N_phot is None: # FIXME: why N_phot?
                         ned_objname = self._candidates[idx][1][0]
-                    else: raise IdentificationError(\
-                            'More than one candidate matched by name')
+                    else:
+                        raise IdentificationError(\
+                                'More than one candidate matched by name')
             if ned_objname is None:
                 raise IdentificationError( \
                     'No candidate is matched by this name.')
@@ -587,24 +622,27 @@ class NedSpider:
 
         # get classification result table
         soup_i = BeautifulSoup(req.text, "html5lib")
-        cid_elm = soup_i.find_all('table',
+        cl_elm = soup_i.find_all('table',
                 attrs={'summary': 'Classification Results'})[0]
-        cid_rows = cid_elm.find_all('tr')
-        cid_results, sec_i = {}, ''
-        for row_i in cid_rows:
+        cl_rows = cl_elm.find_all('tr')
+        cl_results, sec_i = {}, ''
+        for row_i in cl_rows:
             cells_i = row_i.find_all('th')
             if len(cells_i) == 1: # this is a section header.
                 sec_i = cells_i[0].text
-                cid_results[sec_i] = []
+                cl_results[sec_i] = []
             else: # this is a row.
                 cells_i = [i.text for i in row_i.find_all('td')][:-1]
                 for i_cell, cell_i in enumerate(cells_i):
-                    if cell_i == '...': cells_i[i_cell] = ''
-                    else: cells_i[i_cell] = cell_i.replace(\
-                            u'\xa0i\xa0\xa0', u'').replace('    ', ' ')
-                if sec_i != '': cid_results[sec_i].append(tuple(cells_i))
+                    if cell_i == '...':
+                        cells_i[i_cell] = ''
+                    else:
+                        cells_i[i_cell] = cell_i.replace(\
+                                u'\xa0i\xa0\xa0', u'').replace('    ', ' ')
+                if sec_i != '':
+                    cl_results[sec_i].append(tuple(cells_i))
 
-        return cid_results
+        return cl_results
 
     def image(self, idx=None, name=None):
 
@@ -618,8 +656,9 @@ class NedSpider:
         if idx is None and name is None:
             if self.N_candidates == 1:
                 image_link = self._candidates[0][17][1]
-            else: raise RuntimeError('Object not uniquely identified' + \
-                    ' in the candidate list.')
+            else:
+                raise RuntimeError('Object not uniquely ' + \
+                        'identified in the candidate list.')
 
         # if we have a valid index, use it.
         image_link = None, None
@@ -628,9 +667,11 @@ class NedSpider:
         else: # try to indentify by name
             for cad_i in self._candidates:
                 if cad_i[1][0] == name: # exact match
-                    if image_link is None: image_link = cad_i[17][1]
-                    else: raise IdentificationError(\
-                            'More than one candidate matched by name')
+                    if image_link is None:
+                        image_link = cad_i[17][1]
+                    else:
+                        raise IdentificationError(\
+                                'More than one candidate matched by name')
             if image_link is None:
                 raise IdentificationError('No photometry information is ' \
                         'matched by this name.')
@@ -654,6 +695,51 @@ class NedSpider:
 
         # TODO: convert HTML table to some organized tabular format.
         # see: NOTE180111A
+
+    def distance(self, name=None, alias=None):
+
+        '''
+            Get redshift-independent distances.
+            TODO: doc.
+        '''
+
+        ned_objname = None # NED primary object name
+
+        # if just single object,
+        if idx is None and name is None:
+            if self.N_candidates == 1:
+                ned_objname = self._candidates[0][1][0]
+            else:
+                raise RuntimeError('Target not uniquely identified' \
+                        ' in the candidate list.')
+
+        # if we have a valid index, use it.
+        if isinstance(idx, int):
+            ned_objname = self._candidates[idx][1][0]
+        else: # try to indentify by name
+            for cad_i in self._candidates:
+                if cad_i[1][0] == name: # exact match
+                    if N_phot is None: # FIXME: N_phot
+                        ned_objname = self._candidates[idx][1][0]
+                    else:
+                        raise IdentificationError(\
+                                'More than one candidate matched by name')
+            if ned_objname is None:
+                raise IdentificationError( \
+                        'No candidate is matched by this name.')
+
+        # construct query url
+        req_url = self.ned_mirror_url + \
+                '/cgi-bin/nDistance?objname=' + ps.quote(ned_objname)
+        req = requests.get(req_url)
+
+        # soup the page.
+        soup_i = BeautifulSoup(req.text, 'html5lib')
+
+        # find table of redshift-independent distance
+        dist_elm = soup_i(text=re.compile( \
+                r'Individual Distance Measurement'))[0].parent.parent
+        # TODO: what if failed?
 
 #a = NedSpider(name='NGC 1300')
 #a = NedSpider(radec=('01h36m41.7s', '+15d47m01s'))
