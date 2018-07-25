@@ -696,7 +696,7 @@ class NedSpider:
         # TODO: convert HTML table to some organized tabular format.
         # see: NOTE180111A
 
-    def distance(self, name=None, alias=None):
+    def distance(self, name=None, idx=None):
 
         '''
             Get redshift-independent distances.
@@ -730,24 +730,52 @@ class NedSpider:
 
         # construct query url
         req_url = self.ned_mirror_url + \
-                '/cgi-bin/nDistance?objname=' + ps.quote(ned_objname)
-        req = requests.get(req_url)
+                '/cgi-bin/nDistance?name=' + ps.quote(ned_objname)
+        try:
+            req = requests.get(req_url)
+        except Exception as e: # exc handling
+            raise
 
-        # soup the page.
+        # parse the page
         soup_i = BeautifulSoup(req.text, 'html5lib')
 
-        # find table of redshift-independent distance
-        dist_elm = soup_i(text=re.compile( \
-                r'Individual Distance Measurement'))[0].parent.parent
-        # TODO: what if failed?
+        # find number of redshift-independent distance
+        dist_count_str = soup_i(text=re.compile(r'Distances found in NED'))[0]
+        N_dist = int(dist_count_str.split(' ')[0])
 
-#a = NedSpider(name='NGC 1300')
-#a = NedSpider(radec=('01h36m41.7s', '+15d47m01s'))
-#print(a.alias(galaxy_only=True, expand_aliases=True))
+        # if nothing was found, return nothing.
+        if not N_dist:
+            return {}
 
-#phot = a.photometry()
-#print(phot)
-#a.get_phot()
-#NedSpider._get_phot(25832)
+        # parse tables and add into the dict
+        result = {}
 
-#print (NedSpider._get_class('')['Galaxy Morphology'])
+        # have computed summary statistics
+        summ_stat_elm = soup_i(text=re.compile(r'Computed Summary Statistics'))
+        if len(summ_stat_elm):
+            stat_tab_elm = soup_i(text=re.compile( \
+                    r'Distance Modulus'))[0].parent.parent.parent
+            stat_tab_rows = stat_tab_elm.find_all('tr')
+            result['sumstats'] = {'distmod': {}, 'dist': {}}
+            for row_i in stat_tab_rows:
+                cols_i = row_i.find_all('td')
+                if not len(cols_i):
+                    continue # skip the header line.
+                rlab_i = cols_i[0].text.replace(' ', '').replace('.', '')
+                result['sumstats']['distmod'][rlab_i] = float(cols_i[1].text)
+                result['sumstats']['dist'][rlab_i] = float(cols_i[2].text)
+
+        # parse individual measurements.
+        indi_elm = soup_i(text=re.compile(r'Individually Referenced'))
+        if len(indi_elm): # has individual measurements
+            indi_tab_elm = soup_i( \
+                    text=re.compile(r'(m-M)'))[0].parent.parent.parent
+            indi_tab_rows = indi_tab_elm.find_all('tr')
+            coln_i = [w.get_text() for w in indi_tab_rows[0].find_all('th')]
+            result['individual'] = []
+            for row_i in indi_tab_rows[1:]:
+                cols_i = [w.get_text().strip() for w in row_i.find_all('td')]
+                result['individual'].append({coln_j: colv_j \
+                        for coln_j, colv_j in zip(coln_i, cols_i)})
+
+        return results
